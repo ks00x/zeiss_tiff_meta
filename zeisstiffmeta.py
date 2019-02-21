@@ -80,7 +80,11 @@ def meta_to_dict(tab) :
     m['xpts'] = int(s[0])
     m['ypts'] = int(s[1])
     # there seems to be a bug with high res images:
-    m['Pixel Size'] = m['Pixel Size'] * 1024 / m['xpts']
+    m['Pixel Size'] = m['Pixel Size'] * 1024 / m['xpts']    
+    if isinstance(m['Mag'], str) and 'K X' in m['Mag'] : # translate the 'K X' strings to a floating nunmber
+        m['Mag'] = float(m['Mag'].split(' ')[0]) * 1000.0
+    elif m['Mag'] != '' :        
+        m['Mag'] = float(m['Mag'])
     #m['filename'] = f
     m['width'] = m['xpts'] * m['Pixel Size']
     m['height'] = m['ypts'] * m['Pixel Size']
@@ -113,8 +117,18 @@ def meta_to_dict_all(tab) :
     m['ypts'] = int(s[1])
     # there seems to be a bug with high res images:
     m['Pixel Size'] = m['Pixel Size'] * 1024 / m['xpts']
+    if isinstance(m['Mag'], str) and 'K X' in m['Mag'] : # translate the 'K X' strings to a floating nunmber
+        m['Mag'] = float(m['Mag'].split(' ')[0]) * 1000.0
+    elif m['Mag'] != '' :        
+        m['Mag'] = float(m['Mag'])    
     #m['filename'] = f
     m['width'] = m['xpts'] * m['Pixel Size']
     m['height'] = m['ypts'] * m['Pixel Size']
     return( m )
 
+
+
+# src = 'y:/data import/SEM\\2017-01-24 Mirro aligned6.tif'
+# tab = zeiss_meta(src)
+# m = meta_to_dict(tab)
+# print(m)
