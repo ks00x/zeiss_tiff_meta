@@ -7,8 +7,7 @@ Created on Tue Aug 28 14:18:03 2018
 """
 
 
-
-from tifffile import TiffFile
+from tifffile import TiffFile,imsave,imread
 
 
 
@@ -132,3 +131,37 @@ def meta_to_dict_all(tab) :
 # tab = zeiss_meta(src)
 # m = meta_to_dict(tab)
 # print(m)
+
+
+
+def zeissconvert(srcpath,destpath,fullmeta=False) :
+    '''
+    convert a Zeiss SEM tif file so that the new file
+    has dpi correctly set and ImageJ has the scaling in um
+    Reduced metadata is written to the subject field
+    '''
+    try :                
+        # get the metadata from the original file 
+        tab = zeiss_meta(srcpath)
+        if fullmeta == True :
+            m = meta_to_dict_all(tab)
+        else :
+            m = meta_to_dict(tab)
+        # we have to specify res as pixels/cm
+        r = 1.0 / (m['Pixel Size']*100.0)
+        r = int(r) # imsave freeks out otherwise...
+        res =(r,r,'CENTIMETER')
+        # ImageJ gets this ok, but for SEM um or nm units would be more approriate...
+        # ImageJ does not automatically change the pixels per unit when changing the unit
+        # We could save like this but precalculate pixels/um ... (hack)
+
+        im = imread(srcpath)
+        imsave(destpath,im,compress=6,resolution=res,metadata=m)
+        # metadata written this way end up in the subject area...                              
+        return(True)
+    except Exception as e:
+        print('ERROR writing {} .... '.format(destpath))
+        return(False) 
+        #print(e)
+        # if os.path.isfile(destpath) :
+        #     os.remove(destpath) # remove incomplete files
