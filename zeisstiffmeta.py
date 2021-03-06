@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 import metadata from a zeiss SEM tiff file
 requires the tifffile library ( pip install tifffile )
@@ -6,9 +5,11 @@ Created on Tue Aug 28 14:18:03 2018
 @author: scp
 """
 
-
-from tifffile import TiffFile,imsave,imread
-
+import pathlib
+from tifffile import TiffFile,imsave,imread,imwrite
+import io
+import logging
+logger = logging.getLogger(__name__)
 
 
 def zeiss_meta(file='demodemo.tif') :
@@ -19,14 +20,20 @@ def zeiss_meta(file='demodemo.tif') :
     'value' can be numerical or a string
     'unit' is a string describing the physical unit such as 'uA' , 'V' , 'mm' 
     '''
+    logger.debug(f'zeiss_meta({file})')
+    
     if file == 'demodemo.tif' :
         #load some demo data
         import os
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
         file = dir_path + '\\test.tif'
+    elif isinstance(file,io.BytesIO) :        
+        f = file        
+    else :
+        f = pathlib.Path(file)
     try:
-        with TiffFile(file) as t :
+        with TiffFile(f) as t :
             if hasattr(t,'sem_metadata') == True :
                 sem = t.sem_metadata
             else :
@@ -40,9 +47,9 @@ def zeiss_meta(file='demodemo.tif') :
             except :
                 unit=''
             tab.append((key,val[0],val[1],unit))
-        tab.append(('__filename','__filename',file,''))        
+        tab.append(('__filename','__filename',str(file),''))        
     except Exception as e:
-        print('error reading file:',file)
+        print('error reading file:',str(file))
         print(e)
         return(None)
 
@@ -84,7 +91,7 @@ def meta_to_dict(tab) :
         m['Mag'] = float(m['Mag'].split(' ')[0]) * 1000.0
     elif m['Mag'] != '' :        
         m['Mag'] = float(m['Mag'])
-    #m['filename'] = f
+    #m['filename'] = str(f)
     m['width'] = m['xpts'] * m['Pixel Size']
     m['height'] = m['ypts'] * m['Pixel Size']
     return( m )
@@ -140,6 +147,10 @@ def zeissconvert(srcpath,destpath,fullmeta=False) :
     has dpi correctly set and ImageJ has the scaling in um
     Reduced metadata is written to the subject field
     '''
+    srcpath = pathlib.Path(srcpath)
+    destpath = pathlib.Path(destpath)
+    logger.debug(f'zeiss_convert({srcpath},{destpath})')
+
     try :                
         # get the metadata from the original file 
         tab = zeiss_meta(srcpath)
@@ -154,14 +165,28 @@ def zeissconvert(srcpath,destpath,fullmeta=False) :
         # ImageJ gets this ok, but for SEM um or nm units would be more approriate...
         # ImageJ does not automatically change the pixels per unit when changing the unit
         # We could save like this but precalculate pixels/um ... (hack)
-
-        im = imread(srcpath)
-        imsave(destpath,im,compress=6,resolution=res,metadata=m)
+        print(m)
+        im = imread(str(srcpath))
+        imsave(str(destpath),im,compress=6,resolution=res,metadata=m)
+        #imwrite(str(destpath),im,compress=6,resolution=res)
         # metadata written this way end up in the subject area...                              
         return(True)
     except Exception as e:
-        print('ERROR writing {} .... '.format(destpath))
-        return(False) 
-        #print(e)
-        # if os.path.isfile(destpath) :
-        #     os.remove(destpath) # remove incomplete files
+        logger.error(f'zeiss_convert({srcpath},{destpath})')
+        raise Exception('error in zeissconvert')
+        
+def read_image(file):
+    tf = TiffFile(file)    
+    return tf.asarray()
+
+
+if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.DEBUG)
+    t = zeiss_meta('test.tif')
+    m = meta_to_dict(t)    
+    for key,val in m.items():
+        print(f'{key} = {val}')
+
+
+    zeissconvert('test1.tif','test_converted.tif')
