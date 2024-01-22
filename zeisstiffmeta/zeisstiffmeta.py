@@ -28,9 +28,7 @@ def zeiss_meta(file="demodemo.tif"):
         # load some demo data
         import os
 
-        path = os.path.abspath(__file__)
-        dir_path = os.path.dirname(path)
-        file = dir_path + "\\test.tif"
+        f = pathlib.Path(__file__).parent / "test.tif"
     elif isinstance(file, io.BytesIO):
         f = file
     else:
