@@ -28,4 +28,4 @@ version = {attr = "zeisstiffmeta.__version__"}
 namespaces = false
 
 [tool.setuptools.package-data]
-"zeisstiffmeta" = ["*.tif"]
+zeisstiffmeta = ["*.tif"]
