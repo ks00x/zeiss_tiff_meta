@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools >= 61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeisstiffmeta"
+readme = "README.md"
+authors = [{ name = "Klaus Schwarzburg"}]
+dynamic = ["version"]
+requires-python = ">=3.4"
+dependencies = [
+    "tifffile",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/ks00x/zeiss_tiff_meta"
+"Bug Tracker" = "https://github.com/ks00x/zeiss_tiff_meta/issues"
+
+[tool.setuptools]
+# license-files = ["LICENSE"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "zeisstiffmeta.__version__"}
+
+[tool.setuptools.packages.find]
+namespaces = false
+
+[tool.setuptools.package-data]
+zeisstiffmeta = ["*.tif"]
